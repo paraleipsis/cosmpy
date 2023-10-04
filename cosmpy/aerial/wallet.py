@@ -75,6 +75,55 @@ class Wallet(ABC, UserString):
         return str(self.address())
 
 
+class DefaultWallet(Wallet):
+    @staticmethod
+    def generate(
+            public_key: bytes,
+            private_key: bytes,
+            address: bytes,
+            prefix: Optional[str] = None
+    ) -> "DefaultWallet":
+        return DefaultWallet(
+            address=address,
+            public_key=public_key,
+            private_key=private_key,
+            prefix=prefix
+        )
+
+    def __init__(
+            self,
+            private_key: bytes,
+            address: bytes,
+            public_key: bytes,
+            prefix: Optional[str] = None
+    ):
+        self._address = address
+        self._private_key = private_key
+        self._public_key = public_key
+        self._prefix = prefix
+
+    def address(self) -> Address:
+        """Get the wallet address.
+
+        :return: Wallet address.
+        """
+        return Address(self._address)
+
+    def public_key(self) -> PublicKey:
+        """Get the public key of the wallet.
+
+        :return: public key
+        """
+        return PublicKey(self._public_key)
+
+    def signer(self) -> PrivateKey:
+        """Get  the signer of the wallet.
+
+        :return: signer
+        """
+        return PrivateKey(self._private_key)
+
+
 class LocalWallet(Wallet):
     """Generate local wallet.
 

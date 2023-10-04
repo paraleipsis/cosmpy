@@ -26,6 +26,7 @@ from urllib.parse import urlencode
 import requests
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import Message
+from requests import Response
 
 
 class RestClient:
@@ -40,33 +41,61 @@ class RestClient:
         self._session = requests.session()
         self.rest_address = rest_address
 
-    def get(
-        self,
-        url_base_path: str,
-        request: Optional[Message] = None,
-        used_params: Optional[List[str]] = None,
+    @staticmethod
+    def hard_fix_response(
+            response: Response
     ) -> bytes:
-        """
-        Send a GET request.
+        res = response.json()
 
-        :param url_base_path: URL base path
-        :param request: Protobuf coded request
-        :param used_params: Parameters to be removed from request after converting it to dict
+        if "tip" in res.get("tx", {}).get("auth_info", {}):
+            del res['tx']['auth_info']['tip']
 
-        :raises RuntimeError: if response code is not 200
+        if "tip" in res.get("tx_response", {}).get("tx", {}).get("auth_info", {}):
+            del res['tx_response']['tx']['auth_info']['tip']
 
-        :return: Content of response
-        """
-        url = self._make_url(
-            url_base_path=url_base_path, request=request, used_params=used_params
-        )
+        if "events" in res.get("result", {}):
+            res["result"]["events"] = []
 
-        response = self._session.get(url=url)
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"Error when sending a GET request.\n Response: {response.status_code}, {str(response.content)})"
+        if "events" in res.get("tx_response", {}):
+            res["tx_response"]["events"] = []
+
+        if "msg_responses" in res.get("result", {}):
+            del res["result"]["msg_responses"]
+
+        response = json.dumps(res).encode()
+
+        return response
+
+    def get(
+            self,
+            url_base_path: str,
+            request: Optional[Message] = None,
+            used_params: Optional[List[str]] = None,
+        ) -> bytes:
+            """
+            Send a GET request.
+
+            :param url_base_path: URL base path
+            :param request: Protobuf coded request
+            :param used_params: Parameters to be removed from request after converting it to dict
+
+            :raises RuntimeError: if response code is not 200
+
+            :return: Content of response
+            """
+            url = self._make_url(
+                url_base_path=url_base_path, request=request, used_params=used_params
             )
-        return response.content
+
+            response = self._session.get(url=url)
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Error when sending a GET request.\n Response: {response.status_code}, {str(response.content)})"
+                )
+
+            response = self.hard_fix_response(response)
+
+            return response
 
     def _make_url(
         self,
@@ -131,7 +160,10 @@ class RestClient:
             raise RuntimeError(
                 f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status_code}, {str(response.content)})"
             )
-        return response.content
+
+        response = self.hard_fix_response(response)
+
+        return response
 
     @staticmethod
     def _url_encode(json_request):
