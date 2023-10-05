@@ -368,6 +368,7 @@ class LedgerClient:
         amount: int,
         denom: str,
         sender: Wallet,
+        account: Optional["Account"] = None,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -388,7 +389,7 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account
         )
 
     def query_validators(

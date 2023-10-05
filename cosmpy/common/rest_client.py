@@ -50,8 +50,10 @@ class RestClient:
         if "tip" in res.get("tx", {}).get("auth_info", {}):
             del res['tx']['auth_info']['tip']
 
-        if "tip" in res.get("tx_response", {}).get("tx", {}).get("auth_info", {}):
-            del res['tx_response']['tx']['auth_info']['tip']
+        tx_response = res.get("tx_response", {}).get("tx")
+        if tx_response:
+            if "tip" in tx_response.get("auth_info", {}):
+                del res['tx_response']['tx']['auth_info']['tip']
 
         if "events" in res.get("result", {}):
             res["result"]["events"] = []

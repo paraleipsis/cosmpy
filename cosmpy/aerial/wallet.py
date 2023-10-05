@@ -21,7 +21,7 @@
 
 from abc import ABC, abstractmethod
 from collections import UserString
-from typing import Optional
+from typing import Optional, Union
 
 from cosmpy.crypto.address import Address
 from cosmpy.crypto.hashfuncs import sha256
@@ -80,7 +80,7 @@ class DefaultWallet(Wallet):
     def generate(
             public_key: bytes,
             private_key: bytes,
-            address: bytes,
+            address: Union[bytes, str],
             prefix: Optional[str] = None
     ) -> "DefaultWallet":
         return DefaultWallet(
@@ -93,7 +93,7 @@ class DefaultWallet(Wallet):
     def __init__(
             self,
             private_key: bytes,
-            address: bytes,
+            address: Union[bytes, str],
             public_key: bytes,
             prefix: Optional[str] = None
     ):
