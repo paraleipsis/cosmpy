@@ -59,14 +59,19 @@ class SimulationGasStrategy(GasStrategy):
 
     DEFAULT_MULTIPLIER = 1.65
 
-    def __init__(self, client: "LedgerClient", multiplier: Optional[float] = None):  # type: ignore # noqa: F821
+    def __init__(
+            self,
+            client: "LedgerClient",
+            multiplier: Optional[float] = None,
+            max_gas: Optional[int] = None
+    ):  # type: ignore # noqa: F821
         """Init the Simulation transaction gas strategy.
 
         :param client: Ledger client
         :param multiplier: multiplier, defaults to None
         """
         self._client = client
-        self._max_gas: Optional[int] = None
+        self._max_gas = max_gas
         self._multiplier = multiplier or self.DEFAULT_MULTIPLIER
 
     def estimate_gas(self, tx: Transaction) -> int:

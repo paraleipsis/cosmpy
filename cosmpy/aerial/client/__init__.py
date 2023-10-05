@@ -225,6 +225,7 @@ class LedgerClient:
     def __init__(
         self,
         cfg: NetworkConfig,
+        max_gas: Optional[int] = None,
         query_interval_secs: int = DEFAULT_QUERY_INTERVAL_SECS,
         query_timeout_secs: int = DEFAULT_QUERY_TIMEOUT_SECS,
     ):
@@ -238,7 +239,7 @@ class LedgerClient:
         self._query_timeout_secs = query_timeout_secs
         cfg.validate()
         self._network_config = cfg
-        self._gas_strategy: GasStrategy = SimulationGasStrategy(self)
+        self._gas_strategy: GasStrategy = SimulationGasStrategy(self, max_gas=max_gas)
 
         parsed_url = parse_url(cfg.url)
 
