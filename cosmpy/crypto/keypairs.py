@@ -20,11 +20,9 @@
 """Crypto KeyPairs (Public Key and Private Key)."""
 
 import base64
-import hashlib
-from typing import Callable, Optional, Union
+from typing import Optional, Union
 
 import ecdsa
-from ecdsa.curves import Curve
 from ecdsa.util import sigencode_string, sigencode_string_canonize
 
 from cosmpy.crypto.interface import Signer
@@ -40,15 +38,21 @@ def _base64_decode(value: str) -> bytes:
 class PublicKey:
     """Public key class."""
 
-    curve: Curve = ecdsa.SECP256k1
-    hash_function: Callable = hashlib.sha256
-
-    def __init__(self, public_key: Union[bytes, "PublicKey", ecdsa.VerifyingKey]):
+    def __init__(
+            self,
+            public_key: Union[bytes, "PublicKey", ecdsa.VerifyingKey],
+            network_config: "NetworkConfig" = None # noqa
+    ):
         """Initialize.
 
         :param public_key: butes, public key or ecdsa verifying key instance
         :raises RuntimeError: Invalid public key
         """
+
+        self.network_config = network_config
+        self.hash_function = self.network_config.network_type.hash_function
+        self.curve = self.network_config.network_type.curve
+
         if isinstance(public_key, bytes):
             self._verifying_key = ecdsa.VerifyingKey.from_string(
                 public_key, curve=self.curve, hashfunc=self.hash_function
@@ -130,16 +134,22 @@ class PublicKey:
 class PrivateKey(Signer):
     """Private key class."""
 
-    curve: Curve = ecdsa.SECP256k1
-    hash_function: Callable = hashlib.sha256
-
-    def __init__(self, private_key: Optional[Union[bytes, str]] = None):
+    def __init__(
+            self,
+            private_key: Optional[Union[bytes, str]] = None,
+            network_config: "NetworkConfig" = None  # noqa
+    ):
         """
         Initialize.
 
         :param private_key: bytes private key (optional, None by default).
         :raises RuntimeError: if unable to load private key from input.
         """
+
+        self.network_config = network_config
+        self.hash_function = self.network_config.network_type.hash_function
+        self.curve = self.network_config.network_type.curve
+
         if private_key is None:
             self._signing_key = ecdsa.SigningKey.generate(
                 curve=self.curve, hashfunc=self.hash_function

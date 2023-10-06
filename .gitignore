@@ -21,3 +21,6 @@ Pipfile.lock
 # Coverage related files and folders
 .coverage
 coverage_report/
+
+venv
+venv/

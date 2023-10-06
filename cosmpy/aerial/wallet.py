@@ -23,6 +23,7 @@ from abc import ABC, abstractmethod
 from collections import UserString
 from typing import Optional, Union
 
+from cosmpy.aerial.config import NetworkConfig
 from cosmpy.crypto.address import Address
 from cosmpy.crypto.hashfuncs import sha256
 from cosmpy.crypto.interface import Signer
@@ -81,13 +82,15 @@ class DefaultWallet(Wallet):
             public_key: bytes,
             private_key: bytes,
             address: Union[bytes, str],
+            network_cfg: NetworkConfig,
             prefix: Optional[str] = None
     ) -> "DefaultWallet":
         return DefaultWallet(
             address=address,
             public_key=public_key,
             private_key=private_key,
-            prefix=prefix
+            prefix=prefix,
+            network_cfg=network_cfg
         )
 
     def __init__(
@@ -95,33 +98,35 @@ class DefaultWallet(Wallet):
             private_key: bytes,
             address: Union[bytes, str],
             public_key: bytes,
+            network_cfg: NetworkConfig,
             prefix: Optional[str] = None
     ):
         self._address = address
         self._private_key = private_key
         self._public_key = public_key
         self._prefix = prefix
+        self._network_cfg = network_cfg
 
     def address(self) -> Address:
         """Get the wallet address.
 
         :return: Wallet address.
         """
-        return Address(self._address)
+        return Address(self._address, self._prefix)
 
     def public_key(self) -> PublicKey:
         """Get the public key of the wallet.
 
         :return: public key
         """
-        return PublicKey(self._public_key)
+        return PublicKey(self._public_key, self._network_cfg)
 
     def signer(self) -> PrivateKey:
         """Get  the signer of the wallet.
 
         :return: signer
         """
-        return PrivateKey(self._private_key)
+        return PrivateKey(self._private_key, self._network_cfg)
 
 
 class LocalWallet(Wallet):

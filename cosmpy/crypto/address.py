@@ -54,9 +54,12 @@ class Address(UserString):
         :raises RuntimeError: Incorrect address length
         :raises TypeError: Unexpected type of `value` parameter
         """
+
+        self._prefix = prefix
+
         # pylint: disable=super-init-not-called
-        if prefix is None:
-            prefix = DEFAULT_PREFIX
+        if self._prefix is None:
+            self._prefix = DEFAULT_PREFIX
 
         if isinstance(value, str):
             _, data_base5 = bech32.bech32_decode(value)
@@ -75,16 +78,16 @@ class Address(UserString):
                 raise RuntimeError("Incorrect address length")
 
             self._address = value
-            self._display = _to_bech32(prefix, self._address)
+            self._display = _to_bech32(self._prefix, self._address)
 
         elif isinstance(value, PublicKey):
             self._address = ripemd160(sha256(value.public_key_bytes))
-            self._display = _to_bech32(prefix, self._address)
+            self._display = _to_bech32(self._prefix, self._address)
 
         elif isinstance(value, Address):
             self._address = value._address
             # prefix might be different from the original Address, so we need to reencode it here.
-            self._display = _to_bech32(prefix, self._address)
+            self._display = _to_bech32(self._prefix, self._address)
         else:
             raise TypeError("Unexpected type of `value` parameter")  # pragma: no cover
 
@@ -100,6 +103,11 @@ class Address(UserString):
     def data(self):  # noqa:
         """Return address in string."""
         return str(self)
+
+    @property
+    def prefix(self):  # noqa:
+        """Return address in string."""
+        return self._prefix
 
     def __json__(self):  # noqa:
         return str(self)

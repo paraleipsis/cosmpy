@@ -29,6 +29,7 @@ from cosmpy.aerial.coins import parse_coins
 from cosmpy.crypto.interface import Signer
 from cosmpy.crypto.keypairs import PublicKey
 from cosmpy.protos.cosmos.crypto.secp256k1.keys_pb2 import PubKey as ProtoPubKey
+from cosmpy.protos.injective.crypto.v1beta1.ethsecp256k1.keys_pb2 import PubKey as InjProtoPubKey
 from cosmpy.protos.cosmos.tx.signing.v1beta1.signing_pb2 import SignMode
 from cosmpy.protos.cosmos.tx.v1beta1.tx_pb2 import (
     AuthInfo,
@@ -77,6 +78,18 @@ def _create_proto_public_key(public_key: PublicKey) -> ProtoAny:
         ),
         type_url_prefix="/",
     )
+    return proto_public_key
+
+
+def _create_inj_proto_public_key(public_key: PublicKey) -> ProtoAny:
+    proto_public_key = ProtoAny()
+    proto_public_key.Pack(
+        InjProtoPubKey(
+            key=public_key.public_key_bytes,
+        ),
+        type_url_prefix="/",
+    )
+
     return proto_public_key
 
 
@@ -177,6 +190,7 @@ class Transaction:
         signing_cfgs: Union[SigningCfg, List[SigningCfg]],
         fee: str,
         gas_limit: int,
+        network_type: "NetworkType",
         memo: Optional[str] = None,
     ) -> "Transaction":
         """Seal the transaction.
@@ -197,9 +211,11 @@ class Transaction:
         for signing_cfg in input_signing_cfgs:
             assert signing_cfg.mode == SigningMode.Direct
 
+            public_key = network_type.public_key_generator(signing_cfg.public_key)
+
             signer_infos.append(
                 SignerInfo(
-                    public_key=_create_proto_public_key(signing_cfg.public_key),
+                    public_key=public_key,
                     mode_info=ModeInfo(
                         single=ModeInfo.Single(mode=SignMode.SIGN_MODE_DIRECT)
                     ),

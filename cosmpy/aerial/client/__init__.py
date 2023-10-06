@@ -59,7 +59,6 @@ from cosmpy.crypto.address import Address
 from cosmpy.crypto.hashfuncs import sha256
 from cosmpy.distribution.rest_client import DistributionRestClient
 from cosmpy.params.rest_client import ParamsRestClient
-from cosmpy.protos.cosmos.auth.v1beta1.auth_pb2 import BaseAccount
 from cosmpy.protos.cosmos.auth.v1beta1.query_pb2 import QueryAccountRequest
 from cosmpy.protos.cosmos.auth.v1beta1.query_pb2_grpc import QueryStub as AuthGrpcClient
 from cosmpy.protos.cosmos.bank.v1beta1.query_pb2 import (
@@ -311,10 +310,19 @@ class LedgerClient:
         request = QueryAccountRequest(address=str(address))
         response = self.auth.Account(request)
 
-        account = BaseAccount()
-        if not response.account.Is(BaseAccount.DESCRIPTOR):
+        account = self._network_config.network_type.account
+
+        if not response.account.Is(account.DESCRIPTOR):
             raise RuntimeError("Unexpected account type returned from query")
+
         response.account.Unpack(account)
+
+        if hasattr(account, 'base_account'):
+            return Account(
+                address=address,
+                number=account.base_account.account_number,
+                sequence=account.base_account.sequence,
+            )
 
         return Account(
             address=address,

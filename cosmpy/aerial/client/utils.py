@@ -59,6 +59,7 @@ def prepare_and_broadcast_basic_transaction(
             fee="",
             gas_limit=0,
             memo=memo,
+            network_type=client.network_config.network_type
         )
         tx.sign(sender.signer(), client.network_config.chain_id, account.number)
         tx.complete()
@@ -72,6 +73,7 @@ def prepare_and_broadcast_basic_transaction(
         fee=fee,
         gas_limit=gas_limit,
         memo=memo,
+        network_type=client.network_config.network_type
     )
     tx.sign(sender.signer(), client.network_config.chain_id, account.number)
     tx.complete()
