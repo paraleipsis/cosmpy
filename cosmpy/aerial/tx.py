@@ -30,6 +30,7 @@ from cosmpy.crypto.interface import Signer
 from cosmpy.crypto.keypairs import PublicKey
 from cosmpy.protos.cosmos.crypto.secp256k1.keys_pb2 import PubKey as ProtoPubKey
 from cosmpy.protos.injective.crypto.v1beta1.ethsecp256k1.keys_pb2 import PubKey as InjProtoPubKey
+from cosmpy.protos.ethermint.crypto.v1.ethsecp256k1.keys_pb2 import PubKey as EthProtoPubKey
 from cosmpy.protos.cosmos.tx.signing.v1beta1.signing_pb2 import SignMode
 from cosmpy.protos.cosmos.tx.v1beta1.tx_pb2 import (
     AuthInfo,
@@ -85,6 +86,18 @@ def _create_inj_proto_public_key(public_key: PublicKey) -> ProtoAny:
     proto_public_key = ProtoAny()
     proto_public_key.Pack(
         InjProtoPubKey(
+            key=public_key.public_key_bytes,
+        ),
+        type_url_prefix="/",
+    )
+
+    return proto_public_key
+
+
+def _create_eth_proto_public_key(public_key: PublicKey) -> ProtoAny:
+    proto_public_key = ProtoAny()
+    proto_public_key.Pack(
+        EthProtoPubKey(
             key=public_key.public_key_bytes,
         ),
         type_url_prefix="/",

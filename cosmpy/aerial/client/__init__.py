@@ -398,7 +398,7 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
 
     def query_validators(
@@ -634,8 +634,10 @@ class LedgerClient:
         :param tx: transaction
         :return: estimate gas, fee for transaction
         """
+
         gas_estimate = self.estimate_gas_for_tx(tx)
         fee = self.estimate_fee_from_gas(gas_estimate)
+
         return gas_estimate, fee
 
     def wait_for_query_tx(

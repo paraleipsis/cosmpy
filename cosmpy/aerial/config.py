@@ -25,9 +25,10 @@ import ecdsa
 from dataclasses import dataclass, field
 from typing import Optional, Union, Callable
 
-from cosmpy.aerial.tx import _create_inj_proto_public_key, _create_proto_public_key
+from cosmpy.aerial.tx import _create_inj_proto_public_key, _create_proto_public_key, _create_eth_proto_public_key
 from cosmpy.protos.cosmos.auth.v1beta1.auth_pb2 import BaseAccount
-from cosmpy.protos.injective.types.v1beta1.account_pb2 import EthAccount
+from cosmpy.protos.injective.types.v1beta1.account_pb2 import EthAccount as InjAccount
+from cosmpy.protos.ethermint.types.v1.account_pb2 import EthAccount
 
 
 class NetworkConfigError(RuntimeError):
@@ -37,6 +38,14 @@ class NetworkConfigError(RuntimeError):
     """
 
     pass
+
+
+URL_PREFIXES = (
+    "grpc+https",
+    "grpc+http",
+    "rest+https",
+    "rest+http",
+)
 
 
 @dataclass
@@ -58,22 +67,14 @@ EvmosNetworkType = NetworkType(
     hash_function=sha3.keccak_256,
     curve=ecdsa.SECP256k1,
     account=EthAccount(),
-    public_key_generator=_create_inj_proto_public_key
+    public_key_generator=_create_eth_proto_public_key
 )
 
 InjectiveNetworkType = NetworkType(
     hash_function=sha3.keccak_256,
     curve=ecdsa.SECP256k1,
-    account=EthAccount(),
+    account=InjAccount(),
     public_key_generator=_create_inj_proto_public_key
-)
-
-
-URL_PREFIXES = (
-    "grpc+https",
-    "grpc+http",
-    "rest+https",
-    "rest+http",
 )
 
 
@@ -90,8 +91,8 @@ class NetworkConfig:
     fee_denomination: str
     staking_denomination: str
     url: str
+    network_type: NetworkType
     faucet_url: Optional[str] = None
-    network_type: NetworkType = field(default_factory=CosmosNetworkType)
 
     def validate(self):
         """Validate the network configuration.

@@ -29,6 +29,7 @@ def prepare_and_broadcast_basic_transaction(
     client: "LedgerClient",  # type: ignore # noqa: F821
     tx: "Transaction",  # type: ignore # noqa: F821
     sender: "Wallet",  # type: ignore # noqa: F821
+    denom: str,
     account: Optional["Account"] = None,  # type: ignore # noqa: F821
     gas_limit: Optional[int] = None,
     memo: Optional[str] = None,
@@ -51,16 +52,27 @@ def prepare_and_broadcast_basic_transaction(
     if gas_limit is not None:
         # simply build the fee from the provided gas limit
         fee = client.estimate_fee_from_gas(gas_limit)
+
     else:
 
         # we need to build up a representative transaction so that we can accurately simulate it
+
+        # TODO: maybe entire Evmos feature and not only Canto
+        if client.network_config.chain_id in ("canto_7700-1",):
+            gas_limit = 1
+            fee = f"{client.network_config.fee_minimum_gas_price * gas_limit}{denom}"
+        else:
+            gas_limit = 0
+            fee = ""
+
         tx.seal(
             SigningCfg.direct(sender.public_key(), account.sequence),
-            fee="",
-            gas_limit=0,
+            fee=fee,
+            gas_limit=gas_limit,
             memo=memo,
             network_type=client.network_config.network_type
         )
+
         tx.sign(sender.signer(), client.network_config.chain_id, account.number)
         tx.complete()
 
