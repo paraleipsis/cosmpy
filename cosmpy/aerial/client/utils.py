@@ -60,7 +60,7 @@ def prepare_and_broadcast_basic_transaction(
         # TODO: maybe entire Evmos feature and not only Canto
         if client.network_config.chain_id in ("canto_7700-1",):
             gas_limit = 1
-            fee = f"{client.network_config.fee_minimum_gas_price * gas_limit}{denom}"
+            fee = f"{int(client.network_config.fee_minimum_gas_price * gas_limit)}{denom}"
         else:
             gas_limit = 0
             fee = ""
