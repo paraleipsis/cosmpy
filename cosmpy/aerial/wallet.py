@@ -136,16 +136,16 @@ class LocalWallet(Wallet):
     """
 
     @staticmethod
-    def generate(prefix: Optional[str] = None) -> "LocalWallet":
+    def generate(network_cfg: NetworkConfig, prefix: Optional[str] = None) -> "LocalWallet":
         """generate the local wallet.
 
         :param prefix: prefix, defaults to None
         :return: local wallet
         """
-        return LocalWallet(PrivateKey(), prefix=prefix)
+        return LocalWallet(PrivateKey(), prefix=prefix, network_cfg=network_cfg)
 
     @staticmethod
-    def from_mnemonic(mnemonic: str, prefix: Optional[str] = None) -> "LocalWallet":
+    def from_mnemonic(network_cfg: NetworkConfig, mnemonic: str, prefix: Optional[str] = None) -> "LocalWallet":
         """Generate local wallet from mnemonic.
 
         :param mnemonic: mnemonic
@@ -154,11 +154,11 @@ class LocalWallet(Wallet):
         """
         child_key = derive_child_key_from_mnemonic(mnemonic, path=COSMOS_HD_PATH)
 
-        return LocalWallet(PrivateKey(child_key), prefix=prefix)
+        return LocalWallet(PrivateKey(child_key), prefix=prefix, network_cfg=network_cfg)
 
     @staticmethod
     def from_unsafe_seed(
-        text: str, index: Optional[int] = None, prefix: Optional[str] = None
+        network_cfg: NetworkConfig, text: str, index: Optional[int] = None, prefix: Optional[str] = None
     ) -> "LocalWallet":
         """Generate local wallet from unsafe seed.
 
@@ -172,9 +172,9 @@ class LocalWallet(Wallet):
             private_key_bytes = sha256(
                 private_key_bytes + index.to_bytes(4, byteorder="big")
             )
-        return LocalWallet(PrivateKey(private_key_bytes), prefix=prefix)
+        return LocalWallet(PrivateKey(private_key_bytes), prefix=prefix, network_cfg=network_cfg)
 
-    def __init__(self, private_key: PrivateKey, prefix: Optional[str] = None):
+    def __init__(self, private_key: PrivateKey, network_cfg: NetworkConfig, prefix: Optional[str] = None):
         """Init wallet with.
 
         :param private_key: private key of the wallet
@@ -183,6 +183,7 @@ class LocalWallet(Wallet):
         self._private_key = private_key
         self._public_key = private_key.public_key
         self._prefix = prefix
+        self._network_cfg = network_cfg
 
     def address(self) -> Address:
         """Get the wallet address.
@@ -196,11 +197,11 @@ class LocalWallet(Wallet):
 
         :return: public key
         """
-        return self._public_key
+        return PublicKey(self._public_key, self._network_cfg)
 
     def signer(self) -> PrivateKey:
         """Get  the signer of the wallet.
 
         :return: signer
         """
-        return self._private_key
+        return PrivateKey(self._private_key, self._network_cfg)
