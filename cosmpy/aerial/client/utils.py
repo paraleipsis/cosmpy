@@ -57,8 +57,8 @@ def prepare_and_broadcast_basic_transaction(
 
         # we need to build up a representative transaction so that we can accurately simulate it
 
-        # TODO: maybe entire Evmos feature and not only Canto
-        if client.network_config.chain_id in ("canto_7700-1",):
+        # TODO: maybe entire Evmos feature and not only this chains
+        if client.network_config.chain_id in ("canto_7700-1", "sifchain-1"):
             gas_limit = 1
             fee = f"{int(client.network_config.fee_minimum_gas_price * gas_limit)}{denom}"
         else:
