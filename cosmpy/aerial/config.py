@@ -50,10 +50,10 @@ URL_PREFIXES = (
 
 @dataclass
 class NetworkType:
-    hash_function: Callable = hashlib.sha256
+    hash_function: Callable = field(default_factory=hashlib.sha256)
     curve: Callable = field(default_factory=ecdsa.SECP256k1)
     account: Callable = field(default_factory=BaseAccount())
-    public_key_generator: Callable = _create_proto_public_key
+    public_key_generator: Callable = field(default_factory=_create_proto_public_key)
 
 
 CosmosNetworkType = NetworkType(
