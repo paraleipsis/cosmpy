@@ -22,6 +22,7 @@ import hashlib
 import warnings
 import sha3
 import ecdsa
+from ecdsa.curves import Curve
 from dataclasses import dataclass, field
 from typing import Optional, Union, Callable
 
@@ -50,7 +51,7 @@ URL_PREFIXES = (
 
 @dataclass
 class NetworkType:
-    curve: Callable = field(default_factory=ecdsa.SECP256k1)
+    curve: Curve = field(default_factory=ecdsa.SECP256k1)
     account: Callable = field(default_factory=BaseAccount())
     hash_function: Callable = hashlib.sha256
     public_key_generator: Callable = _create_proto_public_key
