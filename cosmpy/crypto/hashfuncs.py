@@ -21,7 +21,7 @@
 
 import hashlib
 
-from Crypto.Hash import RIPEMD160  # type: ignore # nosec
+from Crypto.Hash import RIPEMD160
 
 
 def sha256(contents: bytes) -> bytes:

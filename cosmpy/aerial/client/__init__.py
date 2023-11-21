@@ -33,6 +33,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 
 from cosmpy.aerial.client.bank import create_bank_send_msg
 from cosmpy.aerial.client.distribution import create_withdraw_delegator_reward
+from cosmpy.aerial.client.gov import create_vote_proposal
 from cosmpy.aerial.client.staking import (
     ValidatorStatus,
     create_delegate_msg,
@@ -82,6 +83,7 @@ from cosmpy.protos.cosmos.distribution.v1beta1.query_pb2 import (
 from cosmpy.protos.cosmos.distribution.v1beta1.query_pb2_grpc import (
     QueryStub as DistributionGrpcClient,
 )
+from cosmpy.protos.cosmos.gov.v1beta1.gov_pb2 import VoteOption
 from cosmpy.protos.cosmos.params.v1beta1.query_pb2 import QueryParamsRequest
 from cosmpy.protos.cosmos.params.v1beta1.query_pb2_grpc import (
     QueryStub as QueryParamsGrpcClient,
@@ -498,6 +500,7 @@ class LedgerClient:
         validator: Address,
         amount: int,
         sender: Wallet,
+        denom: str,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -521,7 +524,7 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
         )
 
     def redelegate_tokens(
@@ -530,6 +533,7 @@ class LedgerClient:
         next_validator: Address,
         amount: int,
         sender: Wallet,
+        denom: str,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -555,7 +559,7 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
         )
 
     def undelegate_tokens(
@@ -563,6 +567,7 @@ class LedgerClient:
         validator: Address,
         amount: int,
         sender: Wallet,
+        denom: str,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -586,13 +591,14 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
         )
 
     def claim_rewards(
         self,
         validator: Address,
         sender: Wallet,
+        denom: str,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -608,7 +614,31 @@ class LedgerClient:
         tx.add_message(create_withdraw_delegator_reward(sender.address(), validator))
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
+        )
+
+    def vote_proposal(
+        self,
+        voter: Address,
+        sender: Wallet,
+        denom: str,
+        proposal_id: int,
+        option: VoteOption,
+        memo: Optional[str] = None,
+        gas_limit: Optional[int] = None,
+    ) -> SubmittedTx:
+
+        tx = Transaction()
+        tx.add_message(
+            create_vote_proposal(
+                option=option,
+                proposal_id=proposal_id,
+                voter=voter
+            )
+        )
+
+        return prepare_and_broadcast_basic_transaction(
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
         )
 
     def estimate_gas_for_tx(self, tx: Transaction) -> int:
