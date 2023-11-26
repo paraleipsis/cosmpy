@@ -52,9 +52,9 @@ from cosmpy.aerial.tx import Transaction, TxState
 from cosmpy.aerial.tx_helpers import MessageLog, SubmittedTx, TxResponse
 from cosmpy.aerial.urls import Protocol, parse_url
 from cosmpy.aerial.wallet import Wallet
-from cosmpy.auth.rest_client import AuthRestClient
+from cosmpy.auth.rest_client import AuthRestClient, AsyncAuthRestClient
 from cosmpy.bank.rest_client import BankRestClient
-from cosmpy.common.rest_client import RestClient
+from cosmpy.common.rest_client import RestClient, AsyncRestClient
 from cosmpy.cosmwasm.rest_client import CosmWasmRestClient
 from cosmpy.crypto.address import Address
 from cosmpy.crypto.hashfuncs import sha256
@@ -265,6 +265,7 @@ class LedgerClient:
             self.tendermint = TendermintQueryGrpcClient(grpc_client)
         else:
             rest_client = RestClient(parsed_url.rest_url)
+            async_rest_client = AsyncRestClient(parsed_url.rest_url)
 
             self.wasm = CosmWasmRestClient(rest_client)  # type: ignore
             self.auth = AuthRestClient(rest_client)  # type: ignore
@@ -274,6 +275,8 @@ class LedgerClient:
             self.distribution = DistributionRestClient(rest_client)  # type: ignore
             self.params = ParamsRestClient(rest_client)  # type: ignore
             self.tendermint = TendermintRestClient(rest_client)  # type: ignore
+
+            self.async_auth = AsyncAuthRestClient(async_rest_client)
 
     @property
     def network_config(self) -> NetworkConfig:
@@ -311,6 +314,36 @@ class LedgerClient:
         """
         request = QueryAccountRequest(address=str(address))
         response = self.auth.Account(request)
+
+        account = self._network_config.network_type.account
+
+        if not response.account.Is(account.DESCRIPTOR):
+            raise RuntimeError("Unexpected account type returned from query")
+
+        response.account.Unpack(account)
+
+        if hasattr(account, 'base_account'):
+            return Account(
+                address=address,
+                number=account.base_account.account_number,
+                sequence=account.base_account.sequence,
+            )
+
+        return Account(
+            address=address,
+            number=account.account_number,
+            sequence=account.sequence,
+        )
+
+    async def aquery_account(self, address: Address) -> Account:
+        """Query account.
+
+        :param address: address
+        :raises RuntimeError: Unexpected account type returned from query
+        :return: account details
+        """
+        request = QueryAccountRequest(address=str(address))
+        response = await self.async_auth.account(request)
 
         account = self._network_config.network_type.account
 

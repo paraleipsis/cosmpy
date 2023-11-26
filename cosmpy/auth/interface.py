@@ -42,8 +42,33 @@ class Auth(ABC):
         :return: QueryAccountResponse
         """
 
+
     @abstractmethod
     def Params(self, request: QueryParamsRequest) -> QueryParamsResponse:
+        """
+        Query all parameters.
+
+        :param request: QueryParamsRequest
+
+        :return: QueryParamsResponse
+        """
+
+
+class AsyncAuth(ABC):
+    """Async Auth abstract class."""
+
+    @abstractmethod
+    async def account(self, request: QueryAccountRequest) -> QueryAccountResponse:
+        """
+        Query account data - sequence, account_id, etc.
+
+        :param request: QueryAccountRequest that contains account address
+
+        :return: QueryAccountResponse
+        """
+
+    @abstractmethod
+    async def params(self, request: QueryParamsRequest) -> QueryParamsResponse:
         """
         Query all parameters.
 
