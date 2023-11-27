@@ -212,7 +212,7 @@ class AsyncRestClient:
     async def hard_fix_response(
             response: aiohttp.ClientResponse
     ) -> bytes:
-        res = await response.json()
+        res = await response.json(content_type=None)
 
         if "tip" in res.get("tx", {}).get("auth_info", {}):
             del res['tx']['auth_info']['tip']
@@ -259,12 +259,12 @@ class AsyncRestClient:
             async with aiohttp.ClientSession() as session:
                 response = await session.get(url=url)
 
-            if response.status != 200:
-                raise RuntimeError(
-                    f"Error when sending a GET request.\n Response: {response.status}, {await response.text()})"
-                )
+                if response.status != 200:
+                    raise RuntimeError(
+                        f"Error when sending a GET request.\n Response: {response.status}, {await response.text()})"
+                    )
 
-            response = await self.hard_fix_response(response)
+                response = await self.hard_fix_response(response)
 
             return response
 
@@ -328,12 +328,12 @@ class AsyncRestClient:
                 headers=headers,
             )
 
-        if response.status != 200:
-            raise RuntimeError(
-                f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
-            )
+            if response.status != 200:
+                raise RuntimeError(
+                    f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
+                )
 
-        response = await self.hard_fix_response(response)
+            response = await self.hard_fix_response(response)
 
         return response
 
