@@ -261,7 +261,7 @@ class AsyncRestClient:
 
             if response.status != 200:
                 raise RuntimeError(
-                    f"Error when sending a GET request.\n Response: {response.status}, {str(response.content)})"
+                    f"Error when sending a GET request.\n Response: {response.status}, {await response.text()})"
                 )
 
             response = await self.hard_fix_response(response)
@@ -330,7 +330,7 @@ class AsyncRestClient:
 
         if response.status != 200:
             raise RuntimeError(
-                f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {str(response.content)})"
+                f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
             )
 
         response = await self.hard_fix_response(response)

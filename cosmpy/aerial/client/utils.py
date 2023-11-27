@@ -96,6 +96,77 @@ def prepare_and_broadcast_basic_transaction(
     return client.broadcast_tx(tx)
 
 
+async def aprepare_and_broadcast_basic_transaction(
+    client: "LedgerClient",  # type: ignore # noqa: F821
+    tx: "Transaction",  # type: ignore # noqa: F821
+    sender: "Wallet",  # type: ignore # noqa: F821
+    denom: str,
+    account: Optional["Account"] = None,  # type: ignore # noqa: F821
+    gas_limit: Optional[int] = None,
+    memo: Optional[str] = None,
+) -> SubmittedTx:
+    """Prepare and broadcast basic transaction.
+
+    :param client: Ledger client
+    :param tx: The transaction
+    :param sender: The transaction sender
+    :param account: The account
+    :param gas_limit: The gas limit
+    :param memo: Transaction memo, defaults to None
+
+    :return: broadcast transaction
+    """
+    # query the account information for the sender
+    if account is None:
+        account = await client.aquery_account(sender.address())
+
+    if gas_limit is not None:
+        # simply build the fee from the provided gas limit
+        fee = client.estimate_fee_from_gas(gas_limit)
+
+    else:
+
+        # we need to build up a representative transaction so that we can accurately simulate it
+
+        # TODO: maybe entire Evmos feature and not only this chains
+        if client.network_config.chain_id in ("canto_7700-1", "sifchain-1"):
+            if client.network_config.chain_id == "sifchain-1":
+                gas_limit = 100000
+            else:
+                gas_limit = 1
+            fee = f"{int(client.network_config.fee_minimum_gas_price * gas_limit)}{denom}"
+        else:
+            gas_limit = 0
+            fee = ""
+
+        tx.seal(
+            signing_cfgs=SigningCfg.direct(sender.public_key(), account.sequence),
+            fee=fee,
+            gas_limit=gas_limit,
+            memo=memo,
+            network_type=client.network_config.network_type
+        )
+
+        tx.sign(sender.signer(), client.network_config.chain_id, account.number)
+        tx.complete()
+
+        # simulate the gas and fee for the transaction
+        gas_limit, fee = await client.aestimate_gas_and_fee_for_tx(tx)
+
+    # finally, build the final transaction that will be executed with the correct gas and fee values
+    tx.seal(
+        SigningCfg.direct(sender.public_key(), account.sequence),
+        fee=fee,
+        gas_limit=gas_limit,
+        memo=memo,
+        network_type=client.network_config.network_type
+    )
+    tx.sign(sender.signer(), client.network_config.chain_id, account.number)
+    tx.complete()
+
+    return await client.abroadcast_tx(tx)
+
+
 def ensure_timedelta(interval: Union[int, float, timedelta]) -> timedelta:
     """
     Return timedelta for interval.

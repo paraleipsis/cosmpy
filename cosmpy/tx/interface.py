@@ -62,3 +62,43 @@ class TxInterface(ABC):
         :param request: GetTxsEventRequest
         :return: GetTxsEventResponse
         """
+
+
+class AsyncTxInterface(ABC):
+    """Tx abstract class."""
+
+    @abstractmethod
+    async def simulate(self, request: svc.SimulateRequest) -> svc.SimulateResponse:
+        """
+        Simulate executing a transaction to estimate gas usage.
+
+        :param request: SimulateRequest
+        :return: SimulateResponse
+        """
+
+    @abstractmethod
+    async def get_tx(self, request: svc.GetTxRequest) -> svc.GetTxResponse:
+        """
+        GetTx fetches a tx by hash.
+
+        :param request: GetTxRequest
+        :return: GetTxResponse
+        """
+
+    @abstractmethod
+    async def broadcast_tx(self, request: svc.BroadcastTxRequest) -> svc.BroadcastTxResponse:
+        """
+        BroadcastTx broadcast transaction.
+
+        :param request: BroadcastTxRequest
+        :return: BroadcastTxResponse
+        """
+
+    @abstractmethod
+    async def get_txs_event(self, request: svc.GetTxsEventRequest) -> svc.GetTxsEventResponse:
+        """
+        GetTxsEvent fetches txs by event.
+
+        :param request: GetTxsEventRequest
+        :return: GetTxsEventResponse
+        """

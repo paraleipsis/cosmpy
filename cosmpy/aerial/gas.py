@@ -37,6 +37,14 @@ class GasStrategy(ABC):
         """
 
     @abstractmethod
+    async def aestimate_gas(self, tx: Transaction) -> int:
+        """Estimate the transaction gas.
+
+        :param tx: Transaction
+        :return: None
+        """
+
+    @abstractmethod
     def block_gas_limit(self) -> int:
         """Get the block gas limit.
 
@@ -75,6 +83,15 @@ class SimulationGasStrategy(GasStrategy):
         self._multiplier = multiplier or self.DEFAULT_MULTIPLIER
 
     def estimate_gas(self, tx: Transaction) -> int:
+        """Get estimated transaction gas.
+
+        :param tx: transaction
+        :return: Estimated transaction gas
+        """
+        gas_estimate = self._client.simulate_tx(tx)
+        return self._clip_gas(int(gas_estimate * self._multiplier))
+
+    async def aestimate_gas(self, tx: Transaction) -> int:
         """Get estimated transaction gas.
 
         :param tx: transaction

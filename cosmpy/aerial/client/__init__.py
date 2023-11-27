@@ -18,7 +18,7 @@
 # ------------------------------------------------------------------------------
 
 """Client functionality."""
-
+import asyncio
 import json
 import math
 import time
@@ -44,6 +44,7 @@ from cosmpy.aerial.client.utils import (
     ensure_timedelta,
     get_paginated,
     prepare_and_broadcast_basic_transaction,
+    aprepare_and_broadcast_basic_transaction
 )
 from cosmpy.aerial.config import NetworkConfig
 from cosmpy.aerial.exceptions import NotFoundError, QueryTimeoutError
@@ -110,7 +111,7 @@ from cosmpy.staking.rest_client import StakingRestClient
 from cosmpy.tendermint.rest_client import (
     CosmosBaseTendermintRestClient as TendermintRestClient,
 )
-from cosmpy.tx.rest_client import TxRestClient
+from cosmpy.tx.rest_client import TxRestClient, AsyncTxRestClient
 
 
 DEFAULT_QUERY_TIMEOUT_SECS = 15
@@ -277,6 +278,7 @@ class LedgerClient:
             self.tendermint = TendermintRestClient(rest_client)  # type: ignore
 
             self.async_auth = AsyncAuthRestClient(async_rest_client)
+            self.atxs = AsyncTxRestClient(async_rest_client)
 
     @property
     def network_config(self) -> NetworkConfig:
@@ -433,6 +435,36 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
+        )
+
+    async def asend_tokens(
+        self,
+        destination: Address,
+        amount: int,
+        denom: str,
+        sender: Wallet,
+        account: Optional["Account"] = None,
+        memo: Optional[str] = None,
+        gas_limit: Optional[int] = None,
+    ) -> SubmittedTx:
+        """Send tokens.
+
+        :param destination: destination address
+        :param amount: amount
+        :param denom: denom
+        :param sender: sender
+        :param memo: memo, defaults to None
+        :param gas_limit: gas limit, defaults to None
+        :return: prepare and broadcast the transaction and transaction details
+        """
+        # build up the store transaction
+        tx = Transaction()
+        tx.add_message(
+            create_bank_send_msg(sender.address(), destination, amount, denom)
+        )
+
+        return await aprepare_and_broadcast_basic_transaction(
             self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
 
@@ -682,6 +714,14 @@ class LedgerClient:
         """
         return self._gas_strategy.estimate_gas(tx)
 
+    async def aestimate_gas_for_tx(self, tx: Transaction) -> int:
+        """Estimate gas for transaction.
+
+        :param tx: transaction
+        :return: Estimated gas for transaction
+        """
+        return await self._gas_strategy.aestimate_gas(tx)
+
     def estimate_fee_from_gas(self, gas_limit: int) -> str:
         """Estimate fee from gas.
 
@@ -699,6 +739,18 @@ class LedgerClient:
         """
 
         gas_estimate = self.estimate_gas_for_tx(tx)
+        fee = self.estimate_fee_from_gas(gas_estimate)
+
+        return gas_estimate, fee
+
+    async def aestimate_gas_and_fee_for_tx(self, tx: Transaction) -> Tuple[int, str]:
+        """Estimate gas and fee for transaction.
+
+        :param tx: transaction
+        :return: estimate gas, fee for transaction
+        """
+
+        gas_estimate = await self.aestimate_gas_for_tx(tx)
         fee = self.estimate_fee_from_gas(gas_estimate)
 
         return gas_estimate, fee
@@ -743,6 +795,46 @@ class LedgerClient:
 
             time.sleep(poll_period.total_seconds())
 
+    async def await_for_query_tx(
+        self,
+        tx_hash: str,
+        timeout: Optional[timedelta] = None,
+        poll_period: Optional[timedelta] = None,
+    ) -> TxResponse:
+        """Wait for query transaction.
+
+        :param tx_hash: transaction hash
+        :param timeout: timeout, defaults to None
+        :param poll_period: poll_period, defaults to None
+
+        :raises QueryTimeoutError: timeout
+
+        :return: transaction response
+        """
+        timeout = (
+            ensure_timedelta(timeout)
+            if timeout
+            else timedelta(seconds=self._query_timeout_secs)
+        )
+        poll_period = (
+            ensure_timedelta(poll_period)
+            if poll_period
+            else timedelta(seconds=self._query_interval_secs)
+        )
+
+        start = datetime.now()
+        while True:
+            try:
+                return await self.aquery_tx(tx_hash)
+            except NotFoundError:
+                pass
+
+            delta = datetime.now() - start
+            if delta >= timeout:
+                raise QueryTimeoutError()
+
+            await asyncio.sleep(poll_period.total_seconds())
+
     def query_tx(self, tx_hash: str) -> TxResponse:
         """query transaction.
 
@@ -754,6 +846,30 @@ class LedgerClient:
         req = GetTxRequest(hash=tx_hash)
         try:
             resp = self.txs.GetTx(req)
+        except grpc.RpcError as e:
+            details = e.details()
+            if "not found" in details:
+                raise NotFoundError() from e
+            raise
+        except RuntimeError as e:
+            details = str(e)
+            if "tx" in details and "not found" in details:
+                raise NotFoundError() from e
+            raise
+
+        return self._parse_tx_response(resp.tx_response)
+
+    async def aquery_tx(self, tx_hash: str) -> TxResponse:
+        """query transaction.
+
+        :param tx_hash: transaction hash
+        :raises NotFoundError: Tx details not found
+        :raises grpc.RpcError: RPC connection issue
+        :return: query response
+        """
+        req = GetTxRequest(hash=tx_hash)
+        try:
+            resp = await self.atxs.get_tx(req)
         except grpc.RpcError as e:
             details = e.details()
             if "not found" in details:
@@ -820,6 +936,21 @@ class LedgerClient:
 
         return int(resp.gas_info.gas_used)
 
+    async def asimulate_tx(self, tx: Transaction) -> int:
+        """simulate transaction.
+
+        :param tx: transaction
+        :raises RuntimeError: Unable to simulate non final transaction
+        :return: gas used in transaction
+        """
+        if tx.state != TxState.Final:
+            raise RuntimeError("Unable to simulate non final transaction")
+
+        req = SimulateRequest(tx=tx.tx)
+        resp = await self.atxs.simulate(req)
+
+        return int(resp.gas_info.gas_used)
+
     def broadcast_tx(self, tx: Transaction) -> SubmittedTx:
         """Broadcast transaction.
 
@@ -833,6 +964,27 @@ class LedgerClient:
 
         # broadcast the transaction
         resp = self.txs.BroadcastTx(broadcast_req)
+        tx_digest = resp.tx_response.txhash
+
+        # check that the response is successful
+        initial_tx_response = self._parse_tx_response(resp.tx_response)
+        initial_tx_response.ensure_successful()
+
+        return SubmittedTx(self, tx_digest)
+
+    async def abroadcast_tx(self, tx: Transaction) -> SubmittedTx:
+        """Broadcast transaction.
+
+        :param tx: transaction
+        :return: Submitted transaction
+        """
+        # create the broadcast request
+        broadcast_req = BroadcastTxRequest(
+            tx_bytes=tx.tx.SerializeToString(), mode=BroadcastMode.BROADCAST_MODE_SYNC
+        )
+
+        # broadcast the transaction
+        resp = await self.atxs.broadcast_tx(broadcast_req)
         tx_digest = resp.tx_response.txhash
 
         # check that the response is successful
