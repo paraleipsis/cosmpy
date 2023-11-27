@@ -464,9 +464,11 @@ class LedgerClient:
             create_bank_send_msg(sender.address(), destination, amount, denom)
         )
 
-        return await aprepare_and_broadcast_basic_transaction(
+        result = await aprepare_and_broadcast_basic_transaction(
             self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
+
+        return result
 
     def query_validators(
         self, status: Optional[ValidatorStatus] = None
