@@ -97,7 +97,7 @@ class SimulationGasStrategy(GasStrategy):
         :param tx: transaction
         :return: Estimated transaction gas
         """
-        gas_estimate = self._client.simulate_tx(tx)
+        gas_estimate = await self._client.asimulate_tx(tx)
         return self._clip_gas(int(gas_estimate * self._multiplier))
 
     def block_gas_limit(self) -> int:

@@ -164,7 +164,9 @@ async def aprepare_and_broadcast_basic_transaction(
     tx.sign(sender.signer(), client.network_config.chain_id, account.number)
     tx.complete()
 
-    return await client.abroadcast_tx(tx)
+    result = await client.abroadcast_tx(tx)
+
+    return result
 
 
 def ensure_timedelta(interval: Union[int, float, timedelta]) -> timedelta:

@@ -720,7 +720,8 @@ class LedgerClient:
         :param tx: transaction
         :return: Estimated gas for transaction
         """
-        return await self._gas_strategy.aestimate_gas(tx)
+        gas = await self._gas_strategy.aestimate_gas(tx)
+        return gas
 
     def estimate_fee_from_gas(self, gas_limit: int) -> str:
         """Estimate fee from gas.
@@ -825,7 +826,8 @@ class LedgerClient:
         start = datetime.now()
         while True:
             try:
-                return await self.aquery_tx(tx_hash)
+                tx = await self.aquery_tx(tx_hash)
+                return tx
             except NotFoundError:
                 pass
 

@@ -192,7 +192,7 @@ class SubmittedTx:
 
         :return: Submitted Transaction
         """
-        self._response = self._client.wait_for_query_tx(
+        self._response = await self._client.await_for_query_tx(
             self.tx_hash, timeout=timeout, poll_period=poll_period
         )
         assert self._response is not None
