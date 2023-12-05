@@ -51,8 +51,8 @@ URL_PREFIXES = (
 
 @dataclass
 class NetworkType:
-    curve: Curve = field(default_factory=ecdsa.SECP256k1)
-    account: Union[BaseAccount, EthAccount, InjAccount] = field(default_factory=BaseAccount())
+    curve: Curve = field(default=ecdsa.SECP256k1)
+    account: Union[BaseAccount, EthAccount, InjAccount] = field(default=BaseAccount())
     hash_function: Callable = hashlib.sha256
     public_key_generator: Callable = _create_proto_public_key
 
