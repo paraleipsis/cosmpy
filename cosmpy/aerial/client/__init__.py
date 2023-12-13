@@ -34,6 +34,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from cosmpy.aerial.client.bank import create_bank_send_msg
 from cosmpy.aerial.client.distribution import create_withdraw_delegator_reward
 from cosmpy.aerial.client.gov import create_vote_proposal
+from cosmpy.aerial.client.ibc import create_ibc_transfer_msg
 from cosmpy.aerial.client.staking import (
     ValidatorStatus,
     create_delegate_msg,
@@ -107,6 +108,7 @@ from cosmpy.protos.cosmos.tx.v1beta1.service_pb2_grpc import ServiceStub as TxGr
 from cosmpy.protos.cosmwasm.wasm.v1.query_pb2_grpc import (
     QueryStub as CosmWasmGrpcClient,
 )
+from cosmpy.protos.ibc.core.client.v1.client_pb2 import Height
 from cosmpy.staking.rest_client import StakingRestClient
 from cosmpy.tendermint.rest_client import (
     CosmosBaseTendermintRestClient as TendermintRestClient,
@@ -462,6 +464,44 @@ class LedgerClient:
         tx = Transaction()
         tx.add_message(
             create_bank_send_msg(sender.address(), destination, amount, denom)
+        )
+
+        result = await aprepare_and_broadcast_basic_transaction(
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
+        )
+
+        return result
+
+    async def send_ibc_transfer(
+        self,
+        receiver: Address,
+        source_port: str,
+        source_channel: str,
+        amount: int,
+        denom: str,
+        sender: Wallet,
+        account: Optional["Account"] = None,
+        memo: Optional[str] = None,
+        gas_limit: Optional[int] = None,
+        timeout_height: Optional[Height] = None,
+        timeout_timestamp: Optional[int] = None
+    ) -> SubmittedTx:
+        if timeout_height is None and timeout_timestamp is None:
+            initial_timestamp = datetime.now() + timedelta(milliseconds=600000)
+            timeout_timestamp = int(initial_timestamp.timestamp() * 1000000000)
+
+        tx = Transaction()
+        tx.add_message(
+            create_ibc_transfer_msg(
+                amount=amount,
+                denom=denom,
+                sender=sender.address(),
+                receiver=receiver,
+                source_port=source_port,
+                source_channel=source_channel,
+                timeout_height=timeout_height,
+                timeout_timestamp=timeout_timestamp
+            )
         )
 
         result = await aprepare_and_broadcast_basic_transaction(

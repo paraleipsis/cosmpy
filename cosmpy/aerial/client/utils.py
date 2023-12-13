@@ -108,8 +108,9 @@ async def aprepare_and_broadcast_basic_transaction(
     """Prepare and broadcast basic transaction.
 
     :param client: Ledger client
+    :param denom: Chain denom
     :param tx: The transaction
-    :param sender: The transaction sender
+    :param sender: The sender
     :param account: The account
     :param gas_limit: The gas limit
     :param memo: Transaction memo, defaults to None
