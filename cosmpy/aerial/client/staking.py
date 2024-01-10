@@ -23,10 +23,12 @@ from enum import Enum
 
 from cosmpy.crypto.address import Address
 from cosmpy.protos.cosmos.base.v1beta1.coin_pb2 import Coin
+from cosmpy.protos.cosmos.staking.v1beta1.staking_pb2 import Description
 from cosmpy.protos.cosmos.staking.v1beta1.tx_pb2 import (
     MsgBeginRedelegate,
     MsgDelegate,
     MsgUndelegate,
+    MsgEditValidator
 )
 
 
@@ -123,4 +125,28 @@ def create_undelegate_msg(
             amount=str(amount),
             denom=str(denom),
         ),
+    )
+
+
+def create_edit_validator_msg(
+    moniker: str,
+    identity: str,
+    website: str,
+    security_contact: str,
+    details: str,
+    validator_address: str,
+    commission_rate: int,
+    min_self_delegation: int
+) -> MsgEditValidator:
+    return MsgEditValidator(
+        description=Description(
+            moniker=moniker,
+            identity=identity,
+            website=website,
+            security_contact=security_contact,
+            details=details
+        ),
+        validator_address=validator_address,
+        commission_rate=commission_rate,
+        min_self_delegation=min_self_delegation
     )

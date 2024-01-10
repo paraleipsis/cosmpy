@@ -199,3 +199,14 @@ class Staking(ABC):
         :param request: QueryParamsRequest
         :return: QueryParamsResponse
         """
+
+
+class AsyncStaking(ABC):
+    @abstractmethod
+    async def validator(self, request: QueryValidatorRequest) -> QueryValidatorResponse:
+        """
+        Query validator info for given validator address.
+
+        :param request: QueryValidatorRequest
+        :return: QueryValidatorResponse
+        """

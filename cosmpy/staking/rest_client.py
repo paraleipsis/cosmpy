@@ -21,7 +21,7 @@
 
 from google.protobuf.json_format import Parse
 
-from cosmpy.common.rest_client import RestClient
+from cosmpy.common.rest_client import RestClient, AsyncRestClient
 from cosmpy.protos.cosmos.staking.v1beta1.query_pb2 import (
     QueryDelegationRequest,
     QueryDelegationResponse,
@@ -52,7 +52,7 @@ from cosmpy.protos.cosmos.staking.v1beta1.query_pb2 import (
     QueryValidatorsRequest,
     QueryValidatorsResponse,
 )
-from cosmpy.staking.interface import Staking
+from cosmpy.staking.interface import Staking, AsyncStaking
 
 
 class StakingRestClient(Staking):
@@ -259,3 +259,24 @@ class StakingRestClient(Staking):
         """
         json_response = self._rest_api.get(f"{self.API_URL}/params")
         return Parse(json_response, QueryParamsResponse())
+
+
+class AsyncStakingRestClient(AsyncStaking):
+    """Staking REST client."""
+
+    API_URL = "/cosmos/staking/v1beta1"
+
+    def __init__(self, rest_api: AsyncRestClient) -> None:
+        """
+        Initialize.
+
+        :param rest_api: RestClient api
+        """
+        self._rest_api = rest_api
+
+    async def validator(self, request: QueryValidatorRequest) -> QueryValidatorResponse:
+        json_response = await self._rest_api.get(
+            f"{self.API_URL}/validators/{request.validator_addr}",
+        )
+
+        return Parse(json_response, QueryValidatorResponse(), ignore_unknown_fields=True)

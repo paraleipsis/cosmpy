@@ -39,7 +39,7 @@ from cosmpy.aerial.client.staking import (
     ValidatorStatus,
     create_delegate_msg,
     create_redelegate_msg,
-    create_undelegate_msg,
+    create_undelegate_msg, create_edit_validator_msg,
 )
 from cosmpy.aerial.client.utils import (
     ensure_timedelta,
@@ -94,6 +94,7 @@ from cosmpy.protos.cosmos.staking.v1beta1.query_pb2 import (
     QueryDelegatorDelegationsRequest,
     QueryDelegatorUnbondingDelegationsRequest,
     QueryValidatorsRequest,
+    QueryValidatorRequest, QueryValidatorResponse
 )
 from cosmpy.protos.cosmos.staking.v1beta1.query_pb2_grpc import (
     QueryStub as StakingGrpcClient,
@@ -109,7 +110,7 @@ from cosmpy.protos.cosmwasm.wasm.v1.query_pb2_grpc import (
     QueryStub as CosmWasmGrpcClient,
 )
 from cosmpy.protos.ibc.core.client.v1.client_pb2 import Height
-from cosmpy.staking.rest_client import StakingRestClient
+from cosmpy.staking.rest_client import StakingRestClient, AsyncStakingRestClient
 from cosmpy.tendermint.rest_client import (
     CosmosBaseTendermintRestClient as TendermintRestClient,
 )
@@ -280,6 +281,7 @@ class LedgerClient:
             self.tendermint = TendermintRestClient(rest_client)  # type: ignore
 
             self.async_auth = AsyncAuthRestClient(async_rest_client)
+            self.async_staking = AsyncStakingRestClient(async_rest_client)
             self.atxs = AsyncTxRestClient(async_rest_client)
 
     @property
@@ -537,6 +539,49 @@ class LedgerClient:
                 )
             )
         return validators
+
+    async def query_validator(
+        self,
+        validator_addr: str
+    ) -> QueryValidatorResponse:
+        req = QueryValidatorRequest(validator_addr=validator_addr)
+
+        validator = await self.async_staking.validator(req)
+
+        return validator
+
+    async def edit_validator(
+        self,
+        moniker: str,
+        identity: str,
+        website: str,
+        security_contact: str,
+        details: str,
+        validator_address: str,
+        commission_rate: int,
+        min_self_delegation: int,
+        sender: Wallet,
+        denom: str,
+        memo: Optional[str] = None,
+        gas_limit: Optional[int] = None,
+    ) -> SubmittedTx:
+        tx = Transaction()
+        tx.add_message(
+            create_edit_validator_msg(
+                moniker=moniker,
+                identity=identity,
+                website=website,
+                security_contact=security_contact,
+                details=details,
+                validator_address=validator_address,
+                commission_rate=commission_rate,
+                min_self_delegation=min_self_delegation
+            )
+        )
+
+        return prepare_and_broadcast_basic_transaction(
+            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
+        )
 
     def query_staking_summary(self, address: Address) -> StakingSummary:
         """Query staking summary.
