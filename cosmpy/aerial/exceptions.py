@@ -76,3 +76,7 @@ class InsufficientFeesError(BroadcastError):
             tx_hash,
             f"Insufficient Fees (minimum required: {self.minimum_required_fee})",
         )
+
+
+class EmptyValidatorData(Exception):
+    pass

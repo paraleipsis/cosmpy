@@ -48,7 +48,7 @@ from cosmpy.aerial.client.utils import (
     aprepare_and_broadcast_basic_transaction
 )
 from cosmpy.aerial.config import NetworkConfig
-from cosmpy.aerial.exceptions import NotFoundError, QueryTimeoutError
+from cosmpy.aerial.exceptions import NotFoundError, QueryTimeoutError, EmptyValidatorData
 from cosmpy.aerial.gas import GasStrategy, SimulationGasStrategy
 from cosmpy.aerial.tx import Transaction, TxState
 from cosmpy.aerial.tx_helpers import MessageLog, SubmittedTx, TxResponse
@@ -187,6 +187,17 @@ class StakingSummary:
     def total_unbonding(self) -> int:
         """total unbonding."""
         return sum(map(lambda p: p.amount, self.unbonding_positions))
+
+
+@dataclass
+class EditValidator:
+    moniker: str = None
+    identity: str = None
+    website: str = None
+    security_contact: str = None
+    details: str = None
+    commission_rate: int = None
+    min_self_delegation: int = None
 
 
 @dataclass
@@ -542,9 +553,9 @@ class LedgerClient:
 
     async def query_validator(
         self,
-        validator_addr: str
+        validator_addr: Address
     ) -> QueryValidatorResponse:
-        req = QueryValidatorRequest(validator_addr=validator_addr)
+        req = QueryValidatorRequest(validator_addr=str(validator_addr))
 
         validator = await self.async_staking.validator(req)
 
@@ -552,30 +563,31 @@ class LedgerClient:
 
     async def edit_validator(
         self,
-        moniker: str,
-        identity: str,
-        website: str,
-        security_contact: str,
-        details: str,
-        validator_address: str,
-        commission_rate: int,
-        min_self_delegation: int,
+        validator_address: Address,
+        edit_data: EditValidator,
         sender: Wallet,
         denom: str,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
+        if not any(value is not None for value in edit_data.__dict__.values()):
+            raise EmptyValidatorData()
+
+        existing_validator = await self.query_validator(
+            validator_addr=validator_address
+        )
+
         tx = Transaction()
         tx.add_message(
             create_edit_validator_msg(
-                moniker=moniker,
-                identity=identity,
-                website=website,
-                security_contact=security_contact,
-                details=details,
                 validator_address=validator_address,
-                commission_rate=commission_rate,
-                min_self_delegation=min_self_delegation
+                moniker=edit_data.moniker if edit_data.moniker else existing_validator.validator.description.moniker,
+                identity=edit_data.identity if edit_data.identity else existing_validator.validator.description.identity,
+                website=edit_data.website if edit_data.website else existing_validator.validator.description.website,
+                security_contact=edit_data.security_contact if edit_data.security_contact else existing_validator.validator.description.security_contact,
+                details=edit_data.details if edit_data.details else existing_validator.validator.description.details,
+                commission_rate=edit_data.commission_rate if edit_data.commission_rate else existing_validator.validator.commission.commission_rates.rate,
+                min_self_delegation=edit_data.min_self_delegation if edit_data.min_self_delegation else existing_validator.validator.min_self_delegation
             )
         )
 

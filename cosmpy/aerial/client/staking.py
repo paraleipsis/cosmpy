@@ -134,7 +134,7 @@ def create_edit_validator_msg(
     website: str,
     security_contact: str,
     details: str,
-    validator_address: str,
+    validator_address: Address,
     commission_rate: int,
     min_self_delegation: int
 ) -> MsgEditValidator:
@@ -146,7 +146,7 @@ def create_edit_validator_msg(
             security_contact=security_contact,
             details=details
         ),
-        validator_address=validator_address,
+        validator_address=str(validator_address),
         commission_rate=commission_rate,
         min_self_delegation=min_self_delegation
     )
