@@ -196,7 +196,7 @@ class EditValidator:
     website: str = None
     security_contact: str = None
     details: str = None
-    commission_rate: int = None
+    commission_rate: float = None
     min_self_delegation: int = None
 
 
