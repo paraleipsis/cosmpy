@@ -567,6 +567,7 @@ class LedgerClient:
         edit_data: EditValidator,
         sender: Wallet,
         denom: str,
+        account: Optional["Account"] = None,
         memo: Optional[str] = None,
         gas_limit: Optional[int] = None,
     ) -> SubmittedTx:
@@ -592,7 +593,7 @@ class LedgerClient:
         )
 
         return prepare_and_broadcast_basic_transaction(
-            self, tx, sender, gas_limit=gas_limit, memo=memo, denom=denom
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
 
     def query_staking_summary(self, address: Address) -> StakingSummary:
