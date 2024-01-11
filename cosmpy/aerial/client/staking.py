@@ -147,6 +147,6 @@ def create_edit_validator_msg(
             details=details
         ),
         validator_address=str(validator_address),
-        commission_rate=commission_rate,
-        min_self_delegation=min_self_delegation
+        commission_rate=str(commission_rate),
+        min_self_delegation=str(min_self_delegation)
     )

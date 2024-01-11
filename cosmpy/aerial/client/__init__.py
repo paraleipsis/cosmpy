@@ -587,8 +587,8 @@ class LedgerClient:
                 website=edit_data.website if edit_data.website else existing_validator.validator.description.website,
                 security_contact=edit_data.security_contact if edit_data.security_contact else existing_validator.validator.description.security_contact,
                 details=edit_data.details if edit_data.details else existing_validator.validator.description.details,
-                commission_rate=edit_data.commission_rate if edit_data.commission_rate else None,
-                min_self_delegation=edit_data.min_self_delegation if edit_data.min_self_delegation else None
+                commission_rate=edit_data.commission_rate,
+                min_self_delegation=edit_data.min_self_delegation
             )
         )
 
