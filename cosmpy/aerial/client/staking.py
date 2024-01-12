@@ -135,7 +135,7 @@ def create_edit_validator_msg(
     security_contact: str,
     details: str,
     validator_address: Address,
-    commission_rate: int,
+    commission_rate: float,
     min_self_delegation: int
 ) -> MsgEditValidator:
     return MsgEditValidator(
@@ -147,6 +147,6 @@ def create_edit_validator_msg(
             details=details
         ),
         validator_address=str(validator_address),
-        commission_rate=str(commission_rate) if commission_rate else None,
+        commission_rate=commission_rate,
         min_self_delegation=str(min_self_delegation) if min_self_delegation else None
     )

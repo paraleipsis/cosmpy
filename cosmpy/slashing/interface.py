@@ -61,3 +61,15 @@ class Slashing(ABC):
 
         :return: QuerySigningInfosResponse
         """
+
+
+class AsyncSlashing(ABC):
+    @abstractmethod
+    async def signing_info(self, request: QuerySigningInfoRequest) -> QuerySigningInfoResponse:
+        """
+        SigningInfo queries the signing info of given cons address.
+
+        :param request: QuerySigningInfoRequest
+
+        :return: QuerySigningInfoResponse
+        """

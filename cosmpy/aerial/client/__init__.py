@@ -90,6 +90,7 @@ from cosmpy.protos.cosmos.params.v1beta1.query_pb2 import QueryParamsRequest
 from cosmpy.protos.cosmos.params.v1beta1.query_pb2_grpc import (
     QueryStub as QueryParamsGrpcClient,
 )
+from cosmpy.protos.cosmos.slashing.v1beta1.query_pb2 import QuerySigningInfoRequest, QuerySigningInfoResponse
 from cosmpy.protos.cosmos.staking.v1beta1.query_pb2 import (
     QueryDelegatorDelegationsRequest,
     QueryDelegatorUnbondingDelegationsRequest,
@@ -110,6 +111,7 @@ from cosmpy.protos.cosmwasm.wasm.v1.query_pb2_grpc import (
     QueryStub as CosmWasmGrpcClient,
 )
 from cosmpy.protos.ibc.core.client.v1.client_pb2 import Height
+from cosmpy.slashing.rest_client import AsyncSlashingRestClient
 from cosmpy.staking.rest_client import StakingRestClient, AsyncStakingRestClient
 from cosmpy.tendermint.rest_client import (
     CosmosBaseTendermintRestClient as TendermintRestClient,
@@ -293,6 +295,7 @@ class LedgerClient:
 
             self.async_auth = AsyncAuthRestClient(async_rest_client)
             self.async_staking = AsyncStakingRestClient(async_rest_client)
+            self.async_slashing = AsyncSlashingRestClient(async_rest_client)
             self.atxs = AsyncTxRestClient(async_rest_client)
 
     @property
@@ -595,6 +598,16 @@ class LedgerClient:
         return prepare_and_broadcast_basic_transaction(
             self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
+
+    async def query_signing_info(
+        self,
+        consensus_addr: Address
+    ) -> QuerySigningInfoResponse:
+        req = QuerySigningInfoRequest(cons_address=str(consensus_addr))
+
+        signing_info = await self.async_slashing.signing_info(req)
+
+        return signing_info
 
     def query_staking_summary(self, address: Address) -> StakingSummary:
         """Query staking summary.

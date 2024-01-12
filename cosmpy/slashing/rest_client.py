@@ -20,7 +20,7 @@
 
 from google.protobuf.json_format import Parse
 
-from cosmpy.common.rest_client import RestClient
+from cosmpy.common.rest_client import RestClient, AsyncRestClient
 from cosmpy.protos.cosmos.slashing.v1beta1.query_pb2 import (
     QueryParamsResponse,
     QuerySigningInfoRequest,
@@ -28,7 +28,7 @@ from cosmpy.protos.cosmos.slashing.v1beta1.query_pb2 import (
     QuerySigningInfosRequest,
     QuerySigningInfosResponse,
 )
-from cosmpy.slashing.interface import Slashing
+from cosmpy.slashing.interface import Slashing, AsyncSlashing
 
 
 class SlashingRestClient(Slashing):
@@ -80,3 +80,30 @@ class SlashingRestClient(Slashing):
         """
         json_response = self._rest_api.get(f"{self.API_URL}/signing_infos", request)
         return Parse(json_response, QuerySigningInfosResponse())
+
+
+class AsyncSlashingRestClient(AsyncSlashing):
+    """Slashing REST client."""
+
+    API_URL = "/cosmos/slashing/v1beta1"
+
+    def __init__(self, rest_api: AsyncRestClient) -> None:
+        """
+        Initialize.
+
+        :param rest_api: RestClient api
+        """
+        self._rest_api = rest_api
+
+    async def signing_info(self, request: QuerySigningInfoRequest) -> QuerySigningInfoResponse:
+        """
+        SigningInfo queries the signing info of given cons address.
+
+        :param request: QuerySigningInfoRequest
+
+        :return: QuerySigningInfoResponse
+        """
+        json_response = await self._rest_api.get(
+            f"{self.API_URL}/signing_infos/{request.cons_address}",
+        )
+        return Parse(json_response, QuerySigningInfoResponse())
