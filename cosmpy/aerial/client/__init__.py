@@ -35,6 +35,7 @@ from cosmpy.aerial.client.bank import create_bank_send_msg
 from cosmpy.aerial.client.distribution import create_withdraw_delegator_reward
 from cosmpy.aerial.client.gov import create_vote_proposal
 from cosmpy.aerial.client.ibc import create_ibc_transfer_msg
+from cosmpy.aerial.client.slashing import create_unjail_msg
 from cosmpy.aerial.client.staking import (
     ValidatorStatus,
     create_delegate_msg,
@@ -608,6 +609,26 @@ class LedgerClient:
         signing_info = await self.async_slashing.signing_info(req)
 
         return signing_info
+
+    async def unjail_validator(
+        self,
+        validator_address: Address,
+        sender: Wallet,
+        denom: str,
+        account: Optional["Account"] = None,
+        memo: Optional[str] = None,
+        gas_limit: Optional[int] = None,
+    ) -> SubmittedTx:
+        tx = Transaction()
+        tx.add_message(
+            create_unjail_msg(
+                validator_address=validator_address
+            )
+        )
+
+        return prepare_and_broadcast_basic_transaction(
+            self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
+        )
 
     def query_staking_summary(self, address: Address) -> StakingSummary:
         """Query staking summary.
