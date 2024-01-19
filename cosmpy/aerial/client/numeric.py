@@ -8,7 +8,7 @@ from typing import Union
 
 from cosmpy.common.utils import JSONSerializable
 
-DEC_NUM_DIGITS = 6
+DEC_NUM_DIGITS = 18
 """Number of digits for Decimal."""
 
 DEC_ONE = 10**DEC_NUM_DIGITS
