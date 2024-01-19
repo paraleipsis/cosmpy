@@ -21,6 +21,7 @@
 
 from enum import Enum
 
+from cosmpy.aerial.client.numeric import Dec
 from cosmpy.crypto.address import Address
 from cosmpy.protos.cosmos.base.v1beta1.coin_pb2 import Coin
 from cosmpy.protos.cosmos.staking.v1beta1.staking_pb2 import Description
@@ -138,6 +139,9 @@ def create_edit_validator_msg(
     commission_rate: float,
     min_self_delegation: int
 ) -> MsgEditValidator:
+    commission_rate = Dec(commission_rate) if commission_rate else None
+    min_self_delegation = str(min_self_delegation) if min_self_delegation else None
+
     return MsgEditValidator(
         description=Description(
             moniker=moniker,
@@ -147,6 +151,6 @@ def create_edit_validator_msg(
             details=details
         ),
         validator_address=str(validator_address),
-        commission_rate=str(commission_rate) if commission_rate else None,
-        min_self_delegation=str(min_self_delegation) if min_self_delegation else None
+        commission_rate=str(commission_rate),
+        min_self_delegation=min_self_delegation
     )

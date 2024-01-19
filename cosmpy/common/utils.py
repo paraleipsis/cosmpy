@@ -18,9 +18,55 @@
 # ------------------------------------------------------------------------------
 
 """Utils."""
-
+import copy
 import json
+from abc import ABC
+from datetime import datetime
 from typing import Any
+
+
+def to_isoformat(dt: datetime) -> str:
+    return (
+        dt.isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+        .replace(".000Z", "Z")
+    )
+
+
+def to_data(x: Any) -> Any:
+    if hasattr(x, "to_data"):
+        return x.to_data()
+    if isinstance(x, int):
+        return str(x)
+    if isinstance(x, datetime):
+        return to_isoformat(x)
+    if isinstance(x, list):
+        return [to_data(g) for g in x]
+    if isinstance(x, dict):
+        return dict_to_data(x)
+    if isinstance(x, datetime):
+        return to_isoformat(x)
+    return x
+
+
+def dict_to_data(d: dict) -> dict:
+    """Recursively calls to_data on dict"""
+    return {key: to_data(d[key]) for key in d}
+
+
+class JSONSerializable(ABC):
+    def to_data(self) -> Any:
+        """Converts the object to its JSON-serializable Python data representation."""
+        return dict_to_data(copy.deepcopy(self.__dict__))
+
+    def to_json(self) -> str:
+        """Marshals the object into a stringified JSON serialization. Keys are first sorted
+        and the JSON rendered removes all unnecessary whitespace.
+
+        Returns:
+           str: JSON string representation
+        """
+        return json.dumps(self.to_data(), sort_keys=True, separators=(",", ":"))
 
 
 class JSONEncoder(json.JSONEncoder):
