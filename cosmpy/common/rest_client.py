@@ -334,7 +334,7 @@ class AsyncRestClient:
                 )
 
             response = await self.hard_fix_response(response)
-        print(response)
+
         return response
 
     @staticmethod
