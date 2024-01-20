@@ -308,7 +308,7 @@ class AsyncRestClient:
 
         :return: Content of response
         """
-        json_request = MessageToDict(request)
+        json_request = MessageToDict(request, including_default_value_fields=True)
 
         # Workaround
         if "tx" in json_request:
@@ -322,7 +322,6 @@ class AsyncRestClient:
 
         headers = {"Content-type": "application/json", "Accept": "application/json"}
         async with aiohttp.ClientSession() as session:
-            print(json_request)
             response = await session.post(
                 url=f"{self.rest_address}{url_base_path}",
                 json=json_request,
