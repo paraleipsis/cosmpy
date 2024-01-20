@@ -140,7 +140,7 @@ def create_edit_validator_msg(
     min_self_delegation: int
 ) -> MsgEditValidator:
     commission_rate = Dec(commission_rate) if commission_rate else None
-    min_self_delegation = str(min_self_delegation) if min_self_delegation else None
+    min_self_delegation = str(min_self_delegation) if min_self_delegation else "[do-not-modify]"
 
     return MsgEditValidator(
         description=Description(

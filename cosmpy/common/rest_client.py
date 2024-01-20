@@ -308,7 +308,7 @@ class AsyncRestClient:
 
         :return: Content of response
         """
-        json_request = MessageToDict(request, including_default_value_fields=True)
+        json_request = MessageToDict(request)
 
         # Workaround
         if "tx" in json_request:
