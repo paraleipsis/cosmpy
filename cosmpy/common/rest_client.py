@@ -322,6 +322,7 @@ class AsyncRestClient:
 
         headers = {"Content-type": "application/json", "Accept": "application/json"}
         async with aiohttp.ClientSession() as session:
+            print(json_request)
             response = await session.post(
                 url=f"{self.rest_address}{url_base_path}",
                 json=json_request,

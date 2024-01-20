@@ -596,9 +596,11 @@ class LedgerClient:
             )
         )
 
-        return prepare_and_broadcast_basic_transaction(
+        result = await aprepare_and_broadcast_basic_transaction(
             self, tx, sender, gas_limit=gas_limit, memo=memo, account=account, denom=denom
         )
+
+        return result
 
     async def query_signing_info(
         self,
