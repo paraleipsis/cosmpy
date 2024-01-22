@@ -318,6 +318,11 @@ class AsyncRestClient:
                         if "@type" in message and message["@type"] == "/cosmos.staking.v1beta1.MsgEditValidator":
                             if "commission_rate" in message and "min_self_delegation" not in message:
                                 message["min_self_delegation"] = None
+                                json_request["tx"]["body"]["timeout_height"] = "0"
+                                json_request["tx"]["body"]["extension_options"] = []
+                                json_request["tx"]["body"]["non_critical_extension_options"] = []
+                                json_request["tx"]["body"]["memo"] = ""
+
                         if "msg" in message:
                             message["msg"] = json.loads(
                                 base64.b64decode(message["msg"])
