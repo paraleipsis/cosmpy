@@ -331,12 +331,11 @@ class AsyncRestClient:
         headers = {"Content-type": "application/json", "Accept": "application/json"}
         async with aiohttp.ClientSession() as session:
             response = await session.post(
-                url=f"{self.rest_address}{url_base_path}",
+                url=f"https://osmosis-rpc.polkachu.com/txs",
                 json=json_request,
                 headers=headers,
             )
-            import json
-            print(json.dumps(json_request))
+
             if response.status != 200:
                 raise RuntimeError(
                     f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
