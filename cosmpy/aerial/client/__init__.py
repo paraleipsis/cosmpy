@@ -194,11 +194,11 @@ class StakingSummary:
 
 @dataclass
 class EditValidator:
-    moniker: str = None
-    identity: str = None
-    website: str = None
-    security_contact: str = None
-    details: str = None
+    moniker: str = "[do-not-modify]"
+    identity: str = "[do-not-modify]"
+    website: str = "[do-not-modify]"
+    security_contact: str = "[do-not-modify]"
+    details: str = "[do-not-modify]"
     commission_rate: float = None
     min_self_delegation: int = None
 
@@ -578,19 +578,15 @@ class LedgerClient:
         if not any(value is not None for value in edit_data.__dict__.values()):
             raise EmptyValidatorData()
 
-        existing_validator = await self.query_validator(
-            validator_addr=validator_address
-        )
-
         tx = Transaction()
         tx.add_message(
             create_edit_validator_msg(
                 validator_address=validator_address,
-                moniker=edit_data.moniker if edit_data.moniker else existing_validator.validator.description.moniker,
-                identity=edit_data.identity if edit_data.identity else existing_validator.validator.description.identity,
-                website=edit_data.website if edit_data.website else existing_validator.validator.description.website,
-                security_contact=edit_data.security_contact if edit_data.security_contact else existing_validator.validator.description.security_contact,
-                details=edit_data.details if edit_data.details else existing_validator.validator.description.details,
+                moniker=edit_data.moniker,
+                identity=edit_data.identity,
+                website=edit_data.website,
+                security_contact=edit_data.security_contact,
+                details=edit_data.details,
                 commission_rate=edit_data.commission_rate,
                 min_self_delegation=edit_data.min_self_delegation
             )
