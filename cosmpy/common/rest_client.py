@@ -308,21 +308,13 @@ class AsyncRestClient:
 
         :return: Content of response
         """
-        json_request = MessageToDict(request, preserving_proto_field_name=True)
+        json_request = MessageToDict(request)
 
         # Workaround
         if "tx" in json_request:
             if "body" in json_request["tx"]:
                 if "messages" in json_request["tx"]["body"]:
                     for message in json_request["tx"]["body"]["messages"]:
-                        if "@type" in message and message["@type"] == "/cosmos.staking.v1beta1.MsgEditValidator":
-                            if "commission_rate" in message and "min_self_delegation" not in message:
-                                message["min_self_delegation"] = None
-                                json_request["tx"]["body"]["timeout_height"] = "0"
-                                json_request["tx"]["body"]["extension_options"] = []
-                                json_request["tx"]["body"]["non_critical_extension_options"] = []
-                                json_request["tx"]["body"]["memo"] = ""
-
                         if "msg" in message:
                             message["msg"] = json.loads(
                                 base64.b64decode(message["msg"])
@@ -331,7 +323,7 @@ class AsyncRestClient:
         headers = {"Content-type": "application/json", "Accept": "application/json"}
         async with aiohttp.ClientSession() as session:
             response = await session.post(
-                url=f"https://osmosis-rpc.polkachu.com/txs",
+                url=f"{self.rest_address}{url_base_path}",
                 json=json_request,
                 headers=headers,
             )
