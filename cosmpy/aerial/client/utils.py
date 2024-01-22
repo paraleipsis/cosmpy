@@ -163,6 +163,7 @@ async def aprepare_and_broadcast_basic_transaction(
         network_type=client.network_config.network_type
     )
     tx.sign(sender.signer(), client.network_config.chain_id, account.number)
+    print(tx._tx_body)
     tx.complete()
 
     result = await client.abroadcast_tx(tx)
