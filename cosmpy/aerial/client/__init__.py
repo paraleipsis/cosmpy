@@ -1116,8 +1116,7 @@ class LedgerClient:
         broadcast_req = BroadcastTxRequest(
             tx_bytes=tx.tx.SerializeToString(), mode=BroadcastMode.BROADCAST_MODE_SYNC
         )
-        print(tx.tx.SerializeToString())
-        print(broadcast_req)
+
         # broadcast the transaction
         resp = await self.atxs.broadcast_tx(broadcast_req)
         tx_digest = resp.tx_response.txhash

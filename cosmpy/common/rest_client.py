@@ -308,7 +308,7 @@ class AsyncRestClient:
 
         :return: Content of response
         """
-        json_request = MessageToDict(request)
+        json_request = MessageToDict(request, including_default_value_fields=True)
 
         # Workaround
         if "tx" in json_request:
@@ -329,7 +329,6 @@ class AsyncRestClient:
             )
             import json
             print(json.dumps(json_request))
-            print(json_request)
             if response.status != 200:
                 raise RuntimeError(
                     f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
