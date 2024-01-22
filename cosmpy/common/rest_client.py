@@ -327,7 +327,9 @@ class AsyncRestClient:
                 json=json_request,
                 headers=headers,
             )
-
+            import json
+            print(json.dumps(json_request))
+            print(json_request)
             if response.status != 200:
                 raise RuntimeError(
                     f"Error when sending a POST request.\n Request: {json_request}\n Response: {response.status}, {await response.text()})"
