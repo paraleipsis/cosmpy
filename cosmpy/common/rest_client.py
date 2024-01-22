@@ -308,7 +308,7 @@ class AsyncRestClient:
 
         :return: Content of response
         """
-        json_request = MessageToDict(request)
+        json_request = MessageToDict(request, preserving_proto_field_name=True)
 
         # Workaround
         if "tx" in json_request:
@@ -316,8 +316,8 @@ class AsyncRestClient:
                 if "messages" in json_request["tx"]["body"]:
                     for message in json_request["tx"]["body"]["messages"]:
                         if "@type" in message and message["@type"] == "/cosmos.staking.v1beta1.MsgEditValidator":
-                            if "commissionRate" in message and "minSelfDelegation" not in message:
-                                message["minSelfDelegation"] = None
+                            if "commission_rate" in message and "min_self_delegation" not in message:
+                                message["min_self_delegation"] = None
                         if "msg" in message:
                             message["msg"] = json.loads(
                                 base64.b64decode(message["msg"])
