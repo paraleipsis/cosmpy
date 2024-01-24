@@ -107,8 +107,6 @@ _sym_db.RegisterMessage(MsgUndelegateResponse)
 
 _MSG = DESCRIPTOR.services_by_name['Msg']
 _globals = globals()
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cosmos.staking.v1beta1.tx_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
